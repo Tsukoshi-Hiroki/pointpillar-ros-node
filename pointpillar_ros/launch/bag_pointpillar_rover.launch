@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Enable verbose mode to print logs -->
+    <arg name="verbose" default="true"/>
+    <!-- Specify the pointpillar model file name in ../model folder (*.pth) -->
+    <arg name="model_file_name" default="$(find pointpillar_ros)/model/pointpillar/weights/hv_pointpillars_secfpn_6x8_160e_kitti-3d-3class_20220301_150306-37dc2420.pth"/>
+    <!-- Specify the model configuration file name in ../model folder (*.py) -->
+    <arg name="config_file_name" default="$(find pointpillar_ros)/model/pointpillar/pointpillars_hv_secfpn_8xb6-160e_kitti-3d-3class.py"/>
+    <!-- <arg name="config_file_name" default="$(find pointpillar_ros)/model/pointpillar/pointpillars_hv_secfpn_8xb6-160e_kitti-3d-car.py"/> -->
+    <!-- Filtering out detections result if lower than the score [0, 1] -->
+    <arg name="detection_score_threshold" default="0.3"/>
+    <!-- Input point cloud topic -->
+    <arg name="sub_point_cloud_topic" default="/rslidar_points/clock_overrided"/>
+    <!-- Output topic for the 3D detection results -->
+    <arg name="pub_detection_topic" default="/detections"/>
+
+    <node name="pointpillar_ros" type="pointpillar_ros.py" pkg="pointpillar_ros" output="screen">
+        <param name="model_file_name" type="string" value="$(arg model_file_name)"/>
+        <param name="config_file_name" type="string" value="$(arg config_file_name)"/>
+        <param name="detection_score_threshold" type="double" value="$(arg detection_score_threshold)"/>
+        <param name="sub_point_cloud_topic" type="string" value="$(arg sub_point_cloud_topic)"/>
+        <param name="pub_detection_topic" type="string" value="$(arg pub_detection_topic)"/>
+    </node>
+
+
+    <!-- play bag -->
+    <!-- <arg name="bagfile" default="/share/share/RWRC/rwrc23/bagfiles/tsukuba_23-10-21/rwrc23_main_2023-10-21-14-48-31.bag"/> -->
+    <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/ikuta/whill/2024-11-19-15-58-21.bag"/> -->
+    <arg name="bagfile" default="$(env HOME)/bagfiles/ikuta/flareon/2024-11-22-16-36-03.bag"/>
+    <arg name="map_pcd" default="$(env HOME)/pcd/ikuta/ikuta.pcd"/>
+    <arg name="start" default="0"/>
+    <arg name="rate" default="1.0"/>
+    <arg name="leaf_size" default="0.32"/>
+    <arg name="rviz_conf" default="$(find rwrc24_tra_nav)/config/rviz/localizer.rviz"/>
+
+    <!-- time setting -->
+    <param name="use_sim_time" value="true"/>
+
+    <!-- Rover -->
+    <include file="$(find megarover3)/launch/unpack_rslidar_packets.launch"/>
+    <include file="$(find megarover3)/launch/robot_state.launch"/>
+
+    <node pkg="pcl_ros" type="pcd_to_pointcloud" name="pcd_to_pointcloud" args="$(arg map_pcd)" output="screen">
+        <param name="frame_id" value="map"/>
+        <param name="latch" value="true"/>
+        <remap from="/cloud_pcd" to="/map_cloud"/>
+    </node>
+
+    <param name="/ndt_odom_integrator/init_x" value="0"/>
+    <param name="/ndt_odom_integrator/init_y" value="0"/>
+    <param name="/ndt_odom_integrator/init_yaw" value="3.14"/>
+    <param name="/map_matcher/range" value="100"/>
+
+    <!-- ndt -->
+    <node pkg="amsl_navigation_utils" type="map_cloud_downsampler" name="map_cloud_downsampler" output="screen" respawn="true">
+        <param name="leaf_size" value="$(arg leaf_size)"/>
+    </node>
+
+    <include file="$(find rwrc24_tra_nav)/launch/common/ndt.launch">
+        <arg name="scan_cloud" value="/rslidar_points/clock_overrided"/>
+        <arg name="map_cloud" value="map_cloud/downsampled"/>
+        <arg name="leaf_size" value="$(arg leaf_size)"/>
+        <arg name="initialpose_topic" value="initialpose"/>
+    </include>
+
+    <node pkg="amsl_navigation_utils" type="odom_to_pose" name="odom_to_pose">
+        <remap from="/odom" to="/estimated_pose"/>
+        <remap from="/pose" to="/localized_pose"/>
+    </node>
+
+    <!-- tf -->
+    <!-- <param name="/ndt_odom_integrator/enable_odom_tf" value="true"/> -->
+    <!-- <param name="/ndt_odom_integrator/enable_tf" value="true"/> -->
+    <node pkg="amsl_navigation_utils" type="odom_broadcaster" name="odom_broadcaster"/>
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_from_base_footprint" args="0 0 0 0 0 0 base_footprint base_link"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_lidar" args="-0.17 0 1.16 0 0.02 0 base_link rslidar"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_imu" args="0 0 0.58 0 0 0 base_link imu_link"/> -->
+    
+    <!-- IMU TF -->
+    <node pkg="imu_transformer" type="imu_transformer_node" name="imu_transformer" respawn="true">
+        <remap from="imu_in/data" to="imu/data_raw"/>
+        <remap from="imu_out/data" to="imu/data"/>
+        <param name="target_frame" value="base_link"/>
+    </node>
+
+    <!-- rviz -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_conf)"/>
+
+    <!-- play bag -->
+    <node pkg="rosbag" type="play" name="play_bag" output="screen" args=" $(arg bagfile) --clock -s $(arg start) -r $(arg rate) --topics /rslidar_packets /imu/data_raw /odom"/>
+</launch>

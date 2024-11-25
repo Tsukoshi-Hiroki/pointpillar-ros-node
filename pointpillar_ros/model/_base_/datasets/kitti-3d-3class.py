@@ -2,7 +2,9 @@
 dataset_type = 'KittiDataset'
 data_root = 'data/kitti/'
 class_names = ['Pedestrian', 'Cyclist', 'Car']
-point_cloud_range = [0, -40, -3, 70.4, 40, 1]
+# class_names = ['Pedestrian']
+# point_cloud_range = [0, -40, -3, 70.4, 40, 1]
+point_cloud_range=[-34.56, -39.68, -3, 34.56, 39.68, 1]  # HShin [360][pointpillars], [0, -39.68, -3, 69.12, 39.68, 1]
 input_modality = dict(use_lidar=True, use_camera=False)
 metainfo = dict(classes=class_names)
 
