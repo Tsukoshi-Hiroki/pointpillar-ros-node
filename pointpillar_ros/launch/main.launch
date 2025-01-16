@@ -116,7 +116,7 @@
 
     <node pkg="evaluate_detection3d" type="pub_size_bboxarray" name="pub_size_bboxarray" output="screen"/>
     <node pkg="evaluate_detection3d" type="pub_ped_bbox_size" name="pub_ped_bbox_size" output="screen"/>
-    <node pkg="evaluate_detection3d" type="count_detection_label" name="count_detection_label" output="screen" respawn="true"/>
+    <node pkg="evaluate_detection3d" type="count_detection" name="count_detection" output="screen" respawn="true"/>
 
     <!-- 以下から検証ごとに変更の必要な者たち -->
 
@@ -126,18 +126,18 @@
     <!-- <arg name="sub_point_cloud_topic" default="/$(arg robot_1)/rslidar_points/extracted"/> -->
 
     <!-- 通常かhalf_occulusionかの選択  -->
-    <!-- <include file="$(find pointpillar_ros)/launch/edit_pc.launch"/> -->
-    <include file="$(find pointpillar_ros)/launch/edit_pc_for_half_occulusion.launch"/>
+    <include file="$(find pointpillar_ros)/launch/edit_pc.launch"/>
+    <!-- <include file="$(find pointpillar_ros)/launch/edit_pc_for_half_occulusion.launch"/> -->
 
     <!-- play bag -->
     <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250105/multi_2025-01-05-21-02-50_1person_run.bag"/> -->
-    <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250114/multi_2025-01-14-20-08-35_3person_half_occulusion.bag"/>
+    <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250114/multi_2025-01-14-20-13-10_3person_run.bag"/>
     <arg name="start" default="0"/>
     <arg name="rate" default="1.0"/>
     <arg name="stop" default="25.0"/>
     <node pkg="rosbag" type="play" name="play_bag" args="$(arg bagfile) --clock -s $(arg start) -r $(arg rate) "/>
 
-      <!-- 動きがあるときは以下はコメントアウトせよ   -->
+    <!-- 動きがあるときは以下はコメントアウトせよ   -->
     <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250114/bbox/multi_3person_half_occulusion"/>
     <node pkg="rosbag" type="record" name="record_bag" args="record -o $(arg dir_path)/
         /detections

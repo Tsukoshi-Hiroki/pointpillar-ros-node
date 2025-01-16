@@ -21,5 +21,5 @@ sleep 3
 bash ./submodule/value_average_average.sh $input_dir 
 sleep 3
 
-bash ./submodule/detection_ratio.sh $input_dir 
+bash ./submodule/detection_count.sh $input_dir 
 sleep 3
