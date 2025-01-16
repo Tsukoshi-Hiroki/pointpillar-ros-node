@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<launch>
+    
+    <arg name="map_pcd" default="$(env HOME)/pcd/ikuta/dkan_1f.pcd"/>
+    <arg name="leaf_size" default="0.32"/>
+    <arg name="rviz_conf" default="$(find pointpillar_ros)/rviz/bag_for_multi.rviz"/>
+
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(arg rviz_conf)"/>
+  
+    <!-- map -->
+    <node pkg="pcl_ros" type="pcd_to_pointcloud" name="pcd_to_pointcloud" args="$(arg map_pcd)" output="screen">
+        <param name="frame_id" value="map"/>
+        <param name="latch" value="true"/>
+        <remap from="/cloud_pcd" to="/map_cloud"/>
+    </node>
+    <node pkg="amsl_navigation_utils" type="map_cloud_downsampler" name="map_cloud_downsampler" output="screen" respawn="true">
+        <param name="leaf_size" value="$(arg leaf_size)"/>
+    </node>
+
+    <!-- time setting -->
+    <param name="use_sim_time" value="true"/>
+
+    <arg name="robot_1" default="flareon"/>
+    <arg name="robot_2" default="espeon"/>
+
+    <group ns="$(arg robot_1)">
+        <node pkg="rslidar_sdk" type="rslidar_sdk_node" name="rslidar_sdk_node" output="screen">
+            <param name="config_path" value="$(find megarover3)/config/rslidar_packets_$(arg robot_1).yaml"/>
+        </node>
+        <node pkg="megarover3" type="clock_overrider" name="clock_overrider_for_rslidar" output="screen" respawn="true"/>
+
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_from_base_footprint" args="0 0 0 0 0 0 $(arg robot_1)/base_footprint $(arg robot_1)/base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_lidar" args="-0.17 0 1.16 0 0.02 0 $(arg robot_1)/base_link $(arg robot_1)/rslidar"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_imu" args="0 0 0.58 0 0 0 $(arg robot_1)/base_link $(arg robot_1)/imu_link"/>
+
+        <node pkg="amsl_navigation_utils" type="odom_broadcaster" name="odom_broadcaster">
+            <remap from="odom" to="odom"/>
+        </node>
+
+        <param name="ndt_odom_integrator/init_x" value="5.5"/>
+        <param name="ndt_odom_integrator/init_y" value="-7.0"/>
+        <param name="ndt_odom_integrator/init_z" value="-1.0"/>
+        <param name="ndt_odom_integrator/init_yaw" value="0"/>
+        <param name="map_matcher/range" value="100"/>
+
+        <node pkg="ndt_localizer" type="map_matcher" name="map_matcher" respawn="true">
+            <remap from="scan_cloud" to="rslidar_points/clock_overrided"/>
+            <remap from="map_cloud" to="/map_cloud/downsampled"/>
+            <param name="leaf_size" value="0.3"/>
+            <param name="epsilon" value="1e-2"/>
+            <param name="max_iteration" value="30"/>
+            <param name="range" value="100"/>
+        </node>
+
+        <node pkg="ndt_localizer" type="ndt_odom_integrator" name="ndt_odom_integrator">
+            <remap from="odom" to="odom"/>
+            <remap from="imu/data" to="imu/data"/>
+            <remap from="map_loud" to="/map_cloud/downsampled"/>
+            <remap from="initialpose" to="initialpose"/>
+            <param name="sigma_odom" value="0.1"/>
+            <param name="sigma_imu" value="0.01"/>
+            <param name="sigma_ndt" value="0.1"/>
+            <param name="enable_odom_tf" value="false"/>
+        </node>
+
+    </group>
+
+    <group ns="$(arg robot_2)">
+        <node pkg="rslidar_sdk" type="rslidar_sdk_node" name="rslidar_sdk_node" output="screen">
+            <param name="config_path" value="$(find megarover3)/config/rslidar_packets_$(arg robot_2).yaml"/>
+        </node>
+        <node pkg="megarover3" type="clock_overrider" name="clock_overrider_for_rslidar" output="screen" respawn="true"/>
+
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_from_base_footprint" args="0 0 0 0 0 0 $(arg robot_2)/base_footprint $(arg robot_2)/base_link"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_lidar" args="-0.17 0 1.16 0 0.02 0 $(arg robot_2)/base_link $(arg robot_2)/rslidar"/>
+        <node pkg="tf2_ros" type="static_transform_publisher" name="static_tf_imu" args="0 0 0.58 0 0 0 $(arg robot_2)/base_link $(arg robot_2)/imu_link"/>
+
+        <node pkg="amsl_navigation_utils" type="odom_broadcaster" name="odom_broadcaster">
+            <remap from="odom" to="odom"/>
+        </node>
+
+        <param name="ndt_odom_integrator/init_x" value="-0.5"/>
+        <param name="ndt_odom_integrator/init_y" value="-7.0"/>
+        <param name="ndt_odom_integrator/init_z" value="-1.0"/>
+        <param name="ndt_odom_integrator/init_yaw" value="0"/>
+        <param name="map_matcher/range" value="100"/>
+
+        <node pkg="ndt_localizer" type="map_matcher" name="map_matcher" respawn="true">
+            <remap from="scan_cloud" to="rslidar_points/clock_overrided"/>
+            <remap from="map_cloud" to="/map_cloud/downsampled"/>
+            <param name="leaf_size" value="0.3"/>
+            <param name="epsilon" value="1e-2"/>
+            <param name="max_iteration" value="30"/>
+            <param name="range" value="100"/>
+        </node>
+
+        <node pkg="ndt_localizer" type="ndt_odom_integrator" name="ndt_odom_integrator">
+            <remap from="odom" to="odom"/>
+            <remap from="imu/data" to="imu/data"/>
+            <remap from="map_loud" to="/map_cloud/downsampled"/>
+            <remap from="initialpose" to="initialpose"/>
+            <param name="sigma_odom" value="0.1"/>
+            <param name="sigma_imu" value="0.01"/>
+            <param name="sigma_ndt" value="0.1"/>
+            <param name="enable_odom_tf" value="false"/>
+        </node>
+    </group>
+    
+    <node pkg="megarover3" type="message_filter" name="message_filter" output="screen">
+        <remap from="/input1" to="/$(arg robot_1)/rslidar_points/clock_overrided"/> 
+        <remap from="/input2" to="/$(arg robot_2)/rslidar_points/clock_overrided"/> 
+        <remap from="output1" to="/$(arg robot_1)/rslidar_points/clock_overrided/filtered"/> 
+        <remap from="output2" to="/$(arg robot_2)/rslidar_points/clock_overrided/filtered"/> 
+    </node>
+
+
+    <node pkg="evaluate_detection3d" type="pub_size_bboxarray" name="pub_size_bboxarray" output="screen"/>
+    <node pkg="evaluate_detection3d" type="pub_ped_bbox_size" name="pub_ped_bbox_size" output="screen"/>
+    <node pkg="evaluate_detection3d" type="count_detection_label" name="count_detection_label" output="screen" respawn="true"/>
+
+    <!-- 以下から検証ごとに変更の必要な者たち -->
+
+    <!-- Input point cloud topic -->
+    <!-- 単体か複数かの選択 -->
+    <arg name="sub_point_cloud_topic" default="merged_cloud/extracted"/>
+    <!-- <arg name="sub_point_cloud_topic" default="/$(arg robot_1)/rslidar_points/extracted"/> -->
+
+    <!-- 通常かhalf_occulusionかの選択  -->
+    <!-- <include file="$(find pointpillar_ros)/launch/edit_pc.launch"/> -->
+    <include file="$(find pointpillar_ros)/launch/edit_pc_for_half_occulusion.launch"/>
+
+    <!-- play bag -->
+    <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250105/multi_2025-01-05-21-02-50_1person_run.bag"/> -->
+    <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250114/multi_2025-01-14-20-08-35_3person_half_occulusion.bag"/>
+    <arg name="start" default="0"/>
+    <arg name="rate" default="1.0"/>
+    <arg name="stop" default="25.0"/>
+    <node pkg="rosbag" type="play" name="play_bag" args="$(arg bagfile) --clock -s $(arg start) -r $(arg rate) "/>
+
+      <!-- 動きがあるときは以下はコメントアウトせよ   -->
+    <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250114/bbox/multi_3person_half_occulusion"/>
+    <node pkg="rosbag" type="record" name="record_bag" args="record -o $(arg dir_path)/
+        /detections
+        /merged_cloud/extracted
+        /$(arg robot_1)/rslidar_points/extracted
+    "/>
+
+    <!-- Enable verbose mode to print logs -->
+    <arg name="verbose" default="true"/>
+    <!-- Specify the pointpillar model file name in ../model folder (*.pth) -->
+    <arg name="model_file_name" default="$(find pointpillar_ros)/model/pointpillar/weights/hv_pointpillars_secfpn_6x8_160e_kitti-3d-3class_20220301_150306-37dc2420.pth"/>
+    <!-- Specify the model configuration file name in ../model folder (*.py) -->
+    <arg name="config_file_name" default="$(find pointpillar_ros)/model/pointpillar/pointpillars_hv_secfpn_8xb6-160e_kitti-3d-3class.py"/>
+    <!-- Filtering out detections result if lower than the score [0, 1] -->
+    <arg name="detection_score_threshold" default="0.3"/>
+    <!-- Output topic for the 3D detection results -->
+    <arg name="pub_detection_topic" default="/detections"/>
+
+    <node name="pointpillar_ros" type="pointpillar_ros.py" pkg="pointpillar_ros" output="screen">
+        <param name="model_file_name" type="string" value="$(arg model_file_name)"/>
+        <param name="config_file_name" type="string" value="$(arg config_file_name)"/>
+        <param name="detection_score_threshold" type="double" value="$(arg detection_score_threshold)"/>
+        <param name="sub_point_cloud_topic" type="string" value="$(arg sub_point_cloud_topic)"/>
+        <param name="pub_detection_topic" type="string" value="$(arg pub_detection_topic)"/>
+    </node>
+</launch>
