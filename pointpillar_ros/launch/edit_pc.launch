@@ -1,0 +1,50 @@
+<launch>
+
+  <arg name="robot_1" default="flareon"/>
+  <arg name="robot_2" default="espeon"/>
+
+  <!-- single -->
+  <node pkg="pointcloud_concatenate" type="pointcloud_concatenate_node" name="single_pc_concat" respawn="true">
+    <param name="target_frame" value="map" />    
+    <param name="clouds" value="1" />
+    <param name="hz" value="10" />
+    <remap from="cloud_in1" to="/$(arg robot_1)/rslidar_points/clock_overrided/filtered" />
+    <remap from="cloud_out" to="/$(arg robot_1)/rslidar_points/clock_overrided/merged" />
+  </node>
+
+  <node pkg="localmap_creator" type="pc_extractor" name="single_pc_extractor" output="screen">
+    <remap from="/cloud" to="/$(arg robot_1)/rslidar_points/clock_overrided/merged"/> 
+    <remap from="/cloud/extracted" to="/flareon/rslidar_points/extracted"/> 
+    <param name="target_frame" value="map"/>
+    <param name="max_x" value="5.3"/>
+    <param name="min_x" value="0.5"/>
+    <param name="max_y" value="-5.3"/>
+    <param name="min_y" value="-9.2"/>
+    <param name="max_z" value="1.5"/>
+    <param name="min_z" value="-1.12"/>
+  </node>
+
+  <!-- multi -->
+  <node pkg="pointcloud_concatenate" type="pointcloud_concatenate_node" name="multi_pc_concat" respawn="true">
+    <param name="target_frame" value="map" /> 
+    <param name="clouds" value="2" />
+    <param name="hz" value="10" />
+    <remap from="cloud_in1" to="/$(arg robot_1)/rslidar_points/clock_overrided/filtered" />
+    <remap from="cloud_in2" to="/$(arg robot_2)/rslidar_points/clock_overrided/filtered" />
+    <remap from="cloud_out" to="merged_cloud" />
+  </node>
+
+  <node pkg="localmap_creator" type="pc_extractor" name="multi_pc_extractor" output="screen">
+    <remap from="/cloud" to="merged_cloud"/> 
+    <remap from="/cloud/extracted" to="merged_cloud/extracted"/> 
+    <param name="target_frame" value="map"/>
+    <param name="max_x" value="5.3"/>
+    <param name="min_x" value="0.5"/>
+    <param name="max_y" value="-5.3"/>
+    <param name="min_y" value="-9.2"/>
+    <param name="max_z" value="1.5"/>
+    <param name="min_z" value="-1.12"/>
+  </node>
+
+
+</launch>

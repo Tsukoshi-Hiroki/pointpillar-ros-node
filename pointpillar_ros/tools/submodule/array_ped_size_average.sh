@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # 入力ディレクトリと出力ファイル名
-input_dir="~/ws/src/pointpillar-ros-node/pointpillar_ros/csv/bbox_array_size_test1"
-output_file="~/ws/src/pointpillar-ros-node/pointpillar_ros/csv/average_array_size.csv"
+input_dir="~/ws/src/pointpillar-ros-node/pointpillar_ros/csv/$1/bbox_array_ped_size"
+output_file="~/ws/src/pointpillar-ros-node/pointpillar_ros/csv/$1/average_array_ped_size.csv"
+
+echo "Directory is $1"
 
 # 入力チェック
 if [[ -z "$input_dir" || -z "$output_file" ]]; then
@@ -20,10 +22,10 @@ if [[ ! -f "$output_file" ]]; then
 fi
 
 # 書き出し先のヘッダーを作成
-echo "average array_size" > "$output_file"
+echo "Average_Array_Ped_Size" > "$output_file"
 
 # 指定ディレクトリ内のCSVファイルを順に処理
-for csv_file in "$input_dir"/bbox_array_size_*.csv; do
+for csv_file in "$input_dir"/bbox_array_ped_size_*.csv; do
     # ファイルが存在しない場合はスキップ
     if [[ ! -f "$csv_file" ]]; then
         continue
