@@ -22,7 +22,7 @@ if [[ ! -f "$output_file" ]]; then
 fi
 
 # 出力ファイルを初期化（ヘッダー行を追加）
-echo "TotalDetectionCount,NoneDetection,MisDetection,1Ped,2Ped,3Ped,4Ped,5Ped,6Ped,7Ped,8Ped,9Ped,10Ped,11Ped,12Ped,13Ped,14Ped,15Ped,16Ped" > "$output_file"
+echo "TotalDetectionCount,NoneDetection,MissDetection,1Ped,2Ped,3Ped,4Ped,5Ped,6Ped,7Ped,8Ped,9Ped,10Ped,11Ped,12Ped,13Ped,14Ped,15Ped,16Ped" > "$output_file"
 
 # 各列の合計を保持する配列
 declare -a sums

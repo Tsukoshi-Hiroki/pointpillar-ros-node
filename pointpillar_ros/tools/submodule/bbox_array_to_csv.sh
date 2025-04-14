@@ -47,7 +47,7 @@ rostopic echo -p /detections/ped_size > "$SAVE_DIR_4/bbox_array_ped_size.csv" &
 echo "Script execution complete. Data saved to $SAVE_DIR_1/bbox_array.csv."
 echo "Script execution complete. Data saved to $SAVE_DIR_2/bbox_array_size.csv."
 
-sleep 30  
+sleep 30
 rosnode kill /record_bag &
 
 sleep 1

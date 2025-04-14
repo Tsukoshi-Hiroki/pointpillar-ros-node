@@ -130,20 +130,22 @@
     <!-- <include file="$(find pointpillar_ros)/launch/edit_pc_for_half_occulusion.launch"/> -->
 
     <!-- play bag -->
-    <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250105/multi_2025-01-05-21-02-50_1person_run.bag"/> -->
-    <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250114/multi_2025-01-14-20-13-10_3person_run.bag"/>
-    <arg name="start" default="0"/>
-    <arg name="rate" default="1.0"/>
+    <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250105/multi_2025-01-05-20-59-54_1person.bag"/>
+    <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250114/multi_2025-01-14-20-07-53_3person_half_occulusion.bag"/> -->
+    <!-- <arg name="bagfile" default="$(env HOME)/bagfiles/multi_flareon/20250121/_2025-01-22-02-00-05.bag"/> -->
+    <arg name="start" default="13"/>
     <arg name="stop" default="25.0"/>
-    <node pkg="rosbag" type="play" name="play_bag" args="$(arg bagfile) --clock -s $(arg start) -r $(arg rate) "/>
+    <node pkg="rosbag" type="play" name="play_bag" args="$(arg bagfile) --clock -s $(arg start)"/>
 
     <!-- 動きがあるときは以下はコメントアウトせよ   -->
-    <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250114/bbox/multi_3person_half_occulusion"/>
+    <!-- <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250105/bbox/multi_1person"/> -->
+    <!-- <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250114/bbox/multi_3person_half_occulusion"/> -->
+    <!-- <arg name="dir_path" default="$(env HOME)/bagfiles/multi_flareon/20250121/bbox/multi_1person_percial_occulusion"/>
     <node pkg="rosbag" type="record" name="record_bag" args="record -o $(arg dir_path)/
         /detections
         /merged_cloud/extracted
         /$(arg robot_1)/rslidar_points/extracted
-    "/>
+    "/> -->
 
     <!-- Enable verbose mode to print logs -->
     <arg name="verbose" default="true"/>

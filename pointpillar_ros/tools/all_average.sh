@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #実行時は記入せよ 
-input_dir="multi_3person_half_occulusion"
+input_dir="multi_3person_run"
 
 bash ./submodule/array_size_average.sh $input_dir 
 sleep 3
